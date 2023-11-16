@@ -19,7 +19,7 @@ breaks_sqrt <- seq(sqrt(min(merged_data$Count)), sqrt(max(merged_data$Count)), l
 palette_function <- colorBin(palette = brewer.pal(9, "Blues"), bins = breaks_sqrt, domain = merged_data$Count)
 
 # Define the UI
-ui <- fluidPage(
+uitest <- fluidPage(
   titlePanel("Parking Violations in New York Precincts"),
   leafletOutput("map"),
   verbatimTextOutput("info"),
