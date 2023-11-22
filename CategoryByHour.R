@@ -14,7 +14,9 @@ categoryHourUI <- function(id) {
                      selected = "absolute"),
         selectInput(ns("chartType"), "Choose Chart Type:",
                     choices = list("Bar Chart" = "bar", "Stacked Bar Chart" = "stacked"),
-                    selected = "bar")
+                    selected = "bar"),
+        selectInput(ns("category"), "Choose Category:", choices = c("All" = "All"))
+        
       ),
       mainPanel(
         plotOutput(ns("violationPlot"))
@@ -28,7 +30,7 @@ categoryHourServer <- function(id) {
   moduleServer(id, function(input, output, session) {
       
     # Read and process the data
-    violations <- read.csv("C:\\Users\\lauge\\Downloads\\sampled_100k_rows.csv")
+    violations <- read.csv("sampled_200k_rows.csv")
     
     convert_and_round_time <- function(time_str) {
       time_str <- sub("([0-1][0-9])([0-5][0-9])([AP])", "\\1:\\2 \\3M", time_str)
@@ -44,7 +46,7 @@ categoryHourServer <- function(id) {
     violations_summary <- violations_processed %>%
       group_by(Violation.Code) %>%
       summarise(Count = n(), .groups = 'drop') %>%
-      mutate(ViolationCategory = ifelse(Count > 4000, as.character(Violation.Code), "Other"))
+      mutate(ViolationCategory = ifelse(Count > 8000, as.character(Violation.Code), "Other"))
     
     violations_processed <- violations_processed %>%
       left_join(violations_summary, by = "Violation.Code") %>%
@@ -67,35 +69,58 @@ categoryHourServer <- function(id) {
         scale_fill_brewer(palette = "Set3") +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
     }
+    observe({
+      categories <- c("All", sort(unique(violations_processed$ViolationCategory)))
+      updateSelectInput(session, "category", choices = categories)
+    })
     
-    
-    # Render the plot based on the selected value type
     output$violationPlot <- renderPlot({
-      
-      if (input$valueType == "absolute") {
-        violations_by_time_and_category <- violations_processed %>%
-          group_by(ViolationTimeRounded, ViolationCategory) %>%
-          summarise(Count = n(), .groups = 'drop')
-        
-        create_violation_plot(violations_by_time_and_category, "Count", "Violations Over the Course of a Day by Category", input$chartType)
-        
-      } else {
-        total_violations_by_time <- violations_processed %>%
-          group_by(ViolationTimeRounded) %>%
-          summarise(TotalCount = n(), .groups = 'drop')
-        
-        violations_by_time_and_category <- violations_processed %>%
-          group_by(ViolationTimeRounded, ViolationCategory) %>%
-          summarise(Count = n(), .groups = 'drop') %>%
-          left_join(total_violations_by_time, by = "ViolationTimeRounded") %>%
-          mutate(Percentage = (Count / TotalCount) * 100)
-        
-        create_violation_plot(violations_by_time_and_category, "Percentage", "Percentage of Violations Over the Course of a Day by Category", input$chartType)
-        
+      # Data filtering logic based on user input
+      filtered_data <- violations_processed
+      if (input$category != "All") {
+        filtered_data <- filtered_data %>% filter(ViolationCategory == input$category)
       }
+      
+      # Decide whether to use absolute or proportional values
+      data_for_plot <- if (input$valueType == "proportional") {
+        calculate_proportional_data(violations_processed, filtered_data, input$category)
+      } else {
+        calculate_absolute_data(filtered_data)
+      }
+      
+      plot_title <- if (input$category == "All") {
+        "Violations Over the Course of a Day by Category"
+      } else {
+        paste("Violations Over the Course of a Day for", input$category)
+      }
+      
+      y_value <- if (input$valueType == "proportional") "Percentage" else "Count"
+      
+      create_violation_plot(data_for_plot, y_value, plot_title, input$chartType)
     })
   })
 }
+calculate_proportional_data <- function(all_data, filtered_data, category) {
+  total_violations_by_time <- all_data %>%
+    group_by(ViolationTimeRounded) %>%
+    summarise(TotalCount = n(), .groups = 'drop')
+  
+  data_to_use <- if (category == "All") all_data else filtered_data
+  
+  data_to_use %>%
+    group_by(ViolationTimeRounded, ViolationCategory) %>%
+    summarise(Count = n(), .groups = 'drop') %>%
+    left_join(total_violations_by_time, by = "ViolationTimeRounded") %>%
+    mutate(Percentage = (Count / TotalCount) * 100)
+}
+
+
+calculate_absolute_data <- function(data) {
+  data %>%
+    group_by(ViolationTimeRounded, ViolationCategory) %>%
+    summarise(Count = n(), .groups = 'drop')
+}
+
 
 ui <- fluidPage(
   categoryHourUI("violationsMap")
