@@ -19,7 +19,7 @@ categoryHourUI <- function(id) {
         
       ),
       mainPanel(
-        plotOutput(ns("violationPlot"))
+        plotlyOutput(ns("violationPlot")) # Changed to plotlyOutput
       )
     )
   )
@@ -69,13 +69,15 @@ categoryHourServer <- function(id) {
              title = plot_title) +
         scale_fill_brewer(palette = "Set3") +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      
+      ggplotly(p)
     }
     observe({
       categories <- c("All", sort(unique(violations_processed$ViolationCategory)))
       updateSelectInput(session, "category", choices = categories)
     })
     
-    output$violationPlot <- renderPlot({
+    output$violationPlot <- renderPlotly({
       # Data filtering logic based on user input
       filtered_data <- violations_processed
       if (input$category != "All") {

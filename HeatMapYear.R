@@ -5,6 +5,7 @@ library(sf)
 library(viridis)
 library(tools)
 library(shiny)
+library(plotly)
 
 # UI
 heatmapUI <- function(id) {
@@ -12,7 +13,7 @@ heatmapUI <- function(id) {
   fluidPage(
     titlePanel("Heatmap of Parking Violations"),
     mainPanel(
-      plotOutput(ns("violationsHeatmap"), width = "100%") # Adjusted to viewport height
+      plotlyOutput(ns("violationsHeatmap"), width = "100%") # Adjusted to viewport height
     )
   )
 }
@@ -28,21 +29,37 @@ heatmapServer <- function(id) {
     
     # Define date range
     start_date <- as.Date("2016-06-27")
-    end_date <- as.Date("2017-06-26")
+    end_date <- as.Date("2017-06-25")
+    
     
     # Filter data within the specified date range
     violations_filtered <- violations %>%
       filter(Issue.Date >= start_date & Issue.Date <= end_date)
     
-    # Aggregate data by day and add week and weekday information
     violations_by_day <- violations_filtered %>%
       mutate(Day = floor_date(Issue.Date, "day"),
              Week = isoweek(Issue.Date),
-             Weekday = wday(Issue.Date, label = TRUE)) %>%
+             Weekday = wday(Issue.Date, label = TRUE, week_start = 1)) %>%
       group_by(Day, Week, Weekday) %>%
       summarize(Count = n(), .groups = 'drop')
     
     date_seq <- seq.Date(min(violations_by_day$Day), max(violations_by_day$Day), by = "day")
+    
+
+    special_dates_info <- data.frame(
+      Day = as.Date(c("2016-11-24", "2017-03-14", "2017-02-09", "2016-07-04", "2016-09-05", "2017-05-29", "2017-06-25")),
+      Description = c(
+        "Thanksgiving Day",
+        "Snowstorm",
+        "Snowstorms",
+        "Independence Day",
+        "Labor Day",
+        "Memorial Day",
+        "Pride March"
+      )
+    )
+    violations_by_day <- violations_by_day %>%
+      left_join(special_dates_info, by = "Day")
     
     # Determine the first week of each month within that date range
     month_weeks <- data.frame(
@@ -70,9 +87,12 @@ heatmapServer <- function(id) {
     week_to_month$MonthLabel <- toTitleCase(week_to_month$MonthLabel)
     
     # Heatmap generation logic
-    output$violationsHeatmap <- renderPlot({
-      # Plot with ggplot2 using the correct week to month mapping
-      ggplot(violations_by_day, aes(x = Week, y = Weekday, fill = Count)) +
+    output$violationsHeatmap <- renderPlotly({
+      # Create the ggplot
+      p <- ggplot(violations_by_day, aes(x = Week, y = Weekday, fill = Count, 
+                                         text = ifelse(is.na(Description), 
+                                                       paste("Date:", Day, "<br>Count:", Count), 
+                                                       paste("Date:", Day, "<br>Count:", Count,"<br>Description:", Description)))) +
         geom_tile(color = "white") +
         scale_fill_viridis(option = "D") +
         labs(
@@ -85,11 +105,15 @@ heatmapServer <- function(id) {
         theme_minimal() +
         theme(
           axis.text.x = element_text(angle = 0, hjust = 0.5),
-          plot.margin = margin(t = 5, r = 5, b = 5, l = 5, unit = "pt") # Adjusted margins
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5, unit = "pt")
         ) +
         scale_x_continuous(breaks = week_to_month$Week, labels = week_to_month$MonthLabel) +
-        coord_equal() # Changed from coord_fixed to coord_equal
-    }, res = 100) # Increased resolution for better quality
+        scale_y_discrete(limits = rev(levels(violations_by_day$Weekday))) +
+        coord_equal()
+      
+      # Convert to plotly object
+      ggplotly(p, tooltip = "text")
+    })
   })
 }
 
@@ -103,3 +127,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
