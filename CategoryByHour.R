@@ -2,6 +2,7 @@ library(shiny)
 library(dplyr)
 library(lubridate)
 library(ggplot2)
+library(plotly)
 
 categoryHourUI <- function(id) {
   ns <- NS(id)
@@ -28,7 +29,7 @@ categoryHourUI <- function(id) {
 # Define server logic
 categoryHourServer <- function(id) {
   moduleServer(id, function(input, output, session) {
-      
+    
     # Read and process the data
     violations <- read.csv("sampled_200k_rows.csv")
     
@@ -47,7 +48,7 @@ categoryHourServer <- function(id) {
       group_by(Violation.Code) %>%
       summarise(Count = n(), .groups = 'drop') %>%
       mutate(ViolationCategory = ifelse(Count > 8000, as.character(Violation.Code), "Other"))
-
+    
     
     violations_processed <- violations_processed %>%
       left_join(violations_summary, by = "Violation.Code") %>%
