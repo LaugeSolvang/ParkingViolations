@@ -19,7 +19,7 @@ categoryHourUI <- function(id) {
         
       ),
       mainPanel(
-        plotlyOutput(ns("violationPlot")) # Changed to plotlyOutput
+        plotlyOutput(ns("violationPlot")) 
       )
     )
   )
