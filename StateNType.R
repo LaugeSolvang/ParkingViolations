@@ -3,8 +3,7 @@ library(dplyr)
 library(ggplot2)
 
 
-Raw_data <- read.csv("sampled_200k_rows.csv",stringsAsFactors = TRUE)
-data <- select(Raw_data, Plate.Type, Registration.State)
+
 
 
 plateTypeModuleUI <- function(id) {
@@ -21,6 +20,8 @@ plateTypeModuleServer <- function(id, data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
+    Raw_data <- read.csv("sampled_200k_rows.csv",stringsAsFactors = TRUE)
+    data <- select(Raw_data, Plate.Type, Registration.State)
 
     top_plate_types <- reactive({
       data %>%

@@ -6,7 +6,7 @@ library(RColorBrewer)
 
 
 # Read the data outside the server function to do it only once
-precincts <- st_read("policePrecincts\\geo_export_c2050280-78f2-4481-be68-d54c4e876c56.shp")
+precincts <- st_read("policePrecincts/geo_export_c2050280-78f2-4481-be68-d54c4e876c56.shp")
 violations <- read.csv("sampled_200k_rows.csv")
 
 violations_summary <- violations %>%

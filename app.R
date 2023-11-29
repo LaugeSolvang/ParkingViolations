@@ -5,10 +5,10 @@ source("ViolationsMap.r")
 source("CategoryByHour.R")
 source("StateNType.R")
 source("HeatMapYear.R")
-
+source("vehicles.R")
 
 ui <- navbarPage("Dashboard for Parking Violations in NY", 
-                 theme = shinytheme("flatly"), 
+                 theme = shinytheme("flatly"),
                  tabPanel("Violations Map", violationsMapUI("violationsMap")),
                  tabPanel("Vehicle Type by State", plateTypeModuleUI("regState")),
                  tabPanel("Violations Over Time",
@@ -16,14 +16,17 @@ ui <- navbarPage("Dashboard for Parking Violations in NY",
                             categoryHourUI("categoryHour"),
                             heatmapUI("heatmap")
                           )
-                 )
-
+                 ),
+                 tabPanel("Vehicle Type by State", plateTypeModuleUI("regState")),
+                 tabPanel('Vehicles', vehiclesUI('vehicles'))
 )
+
 server <- function(input, output, session) {
   violationsMapServer("violationsMap")
   categoryHourServer("categoryHour")
   plateTypeModuleServer("regState",data)
   heatmapServer("heatmap")
+  vehiclesServer('vehicles')
 }
 
 shinyApp(ui, server)
