@@ -10,7 +10,6 @@ source("vehicles.R")
 ui <- navbarPage("Dashboard for Parking Violations in NY", 
                  theme = shinytheme("flatly"),
                  tabPanel("Violations Map", violationsMapUI("violationsMap")),
-                 tabPanel("Vehicle Type by State", plateTypeModuleUI("regState")),
                  tabPanel("Violations Over Time",
                           verticalLayout(
                             categoryHourUI("categoryHour"),
