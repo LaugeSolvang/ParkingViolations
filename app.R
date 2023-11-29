@@ -17,7 +17,6 @@ ui <- navbarPage("Dashboard for Parking Violations in NY",
                           )
                  ),
                  tabPanel("Vehicle Type by State", plateTypeModuleUI("regState")),
-                 tabPanel("Category by Hour", categoryHourUI("categoryHour")),
                  tabPanel('Vehicles', vehiclesUI('vehicles'))
 )
 
