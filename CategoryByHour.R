@@ -47,6 +47,7 @@ categoryHourServer <- function(id) {
       group_by(Violation.Code) %>%
       summarise(Count = n(), .groups = 'drop') %>%
       mutate(ViolationCategory = ifelse(Count > 8000, as.character(Violation.Code), "Other"))
+
     
     violations_processed <- violations_processed %>%
       left_join(violations_summary, by = "Violation.Code") %>%
