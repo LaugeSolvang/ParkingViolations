@@ -17,7 +17,7 @@ ui <- navbarPage("Dashboard for Parking Violations in NY",
                             heatmapUI("heatmap")
                           )
                  ),
-                 tabPanel("Vehicle Type by State", plateTypeModuleUI("regState")),
+                 tabPanel("Vehicle Type by County", plateTypeModuleUI("regState")),
                  tabPanel('Vehicles', vehiclesUI('vehicles')),
                  tabPanel("Most Likely Ticket", mostLikelyTicketModuleUI("likelyTicket"))
 )

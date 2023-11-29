@@ -9,7 +9,7 @@ library(ggplot2)
 plateTypeModuleUI <- function(id) {
   ns <- NS(id)
   tagList(
-    titlePanel("Top Five Vehicle Types for Each Registration State"),
+    titlePanel("Top Five Vehicle Types for Each Violation County"),
     uiOutput(ns("dropdownOptions")),
     plotOutput(ns("stateCountPlot"))
   )
@@ -21,27 +21,27 @@ plateTypeModuleServer <- function(id, data) {
     ns <- session$ns
     
     Raw_data <- read.csv("sampled_200k_rows.csv",stringsAsFactors = TRUE)
-    data <- select(Raw_data, Plate.Type, Registration.State)
+    data <- select(Raw_data, Plate.Type, Violation.County)
 
     top_plate_types <- reactive({
       data %>%
-        group_by(Registration.State) %>%
+        group_by(Violation.County) %>%
         summarise(Count = n(), .groups = 'drop') %>%
         arrange(desc(Count)) %>%
         slice_head(n = 5) %>%  # Select top 5 most frequent Registration.State values
-        pull(Registration.State)
+        pull(Violation.County)
     })
     
     # Update dropdown options for top Plate.Type values
     output$dropdownOptions <- renderUI({
-      selectInput(ns("selectedPlateType"), "Choose a Registration State:", choices = top_plate_types())
+      selectInput(ns("selectedPlateType"), "Choose a Violation County:", choices = top_plate_types())
     })
     
     # Reactive expression to filter data based on selected Plate.Type
     filtered_data <- reactive({
       req(input$selectedPlateType) # Require input to be non-null
       data %>% 
-        filter(Registration.State == input$selectedPlateType) %>%
+        filter(Violation.County == input$selectedPlateType) %>%
         group_by(Plate.Type) %>%
         summarise(Count = n(), .groups = 'drop') %>%
         arrange(desc(Count)) %>%

@@ -19,7 +19,7 @@ categoryHourUI <- function(id) {
         
       ),
       mainPanel(
-        plotOutput(ns("violationPlot"))
+        plotlyOutput(ns("violationPlot")) 
       )
     )
   )
@@ -54,28 +54,31 @@ categoryHourServer <- function(id) {
       mutate(ViolationCategory = ifelse(is.na(ViolationCategory), "Other", ViolationCategory))
     
     create_violation_plot <- function(data, y_value, plot_title, chart_type) {
-      p <- ggplot(data, aes(x = ViolationTimeRounded, y = !!sym(y_value), fill = ViolationCategory))
+      # Create a basic plotly object
+      p <- plot_ly(data, x = ~ViolationTimeRounded, y = as.formula(paste0("~", y_value)), 
+                   type = 'bar', color = ~ViolationCategory, colors = "Set3")
       
+      # Modify the plot based on the chart type
       if (chart_type == "bar") {
-        p <- p + geom_bar(stat = "identity", position = "dodge")
+        p <- p %>% layout(barmode = 'group')
       } else if (chart_type == "stacked") {
-        p <- p + geom_bar(stat = "identity", position = "stack")
+        p <- p %>% layout(barmode = 'stack')
       }
       
-      p + theme_minimal() +
-        labs(x = "Time of Day (24-hour format)", 
-             y = y_value, 
-             fill = "Violation Category",
-             title = plot_title) +
-        scale_fill_brewer(palette = "Set3") +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1))
-    }
+      # Add labels and adjust layout
+      p <- p %>% layout(title = plot_title,
+                        xaxis = list(title = "Time of Day (24-hour format)"),
+                        yaxis = list(title = y_value),
+                        legend = list(title = list(text = "Violation Category")),
+                        margin = list(b = 150)) # Adjust bottom margin if labels are cut off
+      
+      return(p)    }
     observe({
       categories <- c("All", sort(unique(violations_processed$ViolationCategory)))
       updateSelectInput(session, "category", choices = categories)
     })
     
-    output$violationPlot <- renderPlot({
+    output$violationPlot <- renderPlotly({
       # Data filtering logic based on user input
       filtered_data <- violations_processed
       if (input$category != "All") {
