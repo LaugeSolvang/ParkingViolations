@@ -9,11 +9,15 @@ source("HeatMapYear.R")
 
 ui <- navbarPage("Dashboard for Parking Violations in NY", 
                  theme = shinytheme("flatly"), 
-                 tabPanel("Heat Map",heatmapUI("heatmap")),
                  tabPanel("Violations Map", violationsMapUI("violationsMap")),
                  tabPanel("Vehicle Type by State", plateTypeModuleUI("regState")),
-                 tabPanel("Hour Map", categoryHourUI("categoryHour"))
-              
+                 tabPanel("Violations Over Time",
+                          verticalLayout(
+                            categoryHourUI("categoryHour"),
+                            heatmapUI("heatmap")
+                          )
+                 )
+
 )
 server <- function(input, output, session) {
   violationsMapServer("violationsMap")
