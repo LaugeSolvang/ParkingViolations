@@ -122,7 +122,7 @@ categoryHourServer <- function(id) {
       group_by(ViolationCategory) %>%
       summarise(Description = first(ViolationDescription), .groups = 'drop') %>%
       pull(Description, name = ViolationCategory)
-    
+
     output$violationPlot <- renderPlotly({
       # Data filtering logic based on user input
       filtered_data <- violations_processed
