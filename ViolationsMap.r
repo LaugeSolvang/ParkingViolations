@@ -15,17 +15,29 @@ violations_summary <- violations %>%
 
 merged_data <- merge(precincts, violations_summary, by.x = "precinct", by.y = "Violation.Precinct")
 
-breaks_sqrt <- seq(sqrt(min(merged_data$Count)), sqrt(max(merged_data$Count)), length.out = 10) ^ 2
-palette_function <- colorBin(palette = brewer.pal(9, "Blues"), bins = breaks_sqrt, domain = merged_data$Count)
+# Calculation of breaks using a square root scale, then squared for more linearity
+third_root_min <- (min(merged_data$Count) - 1)^(1/2.5)
+third_root_max <- (max(merged_data$Count) + 1)^(1/2.5) # Adding 1 to avoid zero in case of min value is 0
+breaks_third_root <- seq(third_root_min, third_root_max, length.out = 10) ^ 2.5
+
+# Print breaks for verification
+print(breaks_third_root)
+palette_function <- colorBin(palette = "viridis", bins = breaks_third_root, domain = merged_data$Count)
 
 # UI function for the violations map
 violationsMapUI <- function(id) {
   ns <- NS(id)
   fluidPage(
     titlePanel("Parking Violations in New York Precincts"),
-    leafletOutput(ns("map")),
+    fluidRow(
+      column(
+        width = 12, # Full width
+        leafletOutput(ns("map"), height = 800) # You can adjust the height as needed
+      )
+    ),
     verbatimTextOutput(ns("info"))
   )
+  
 }
 
 
@@ -79,3 +91,4 @@ server <- function(input, output, session) {
 
 # Run the app
 shinyApp(ui, server)
+
