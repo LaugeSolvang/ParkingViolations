@@ -6,6 +6,7 @@ source("CategoryByHour.R")
 source("StateNType.R")
 source("HeatMapYear.R")
 source("vehicles.R")
+source("MostLikelyTicket.R")
 
 ui <- navbarPage("Dashboard for Parking Violations in NY", 
                  theme = shinytheme("flatly"),
@@ -16,8 +17,9 @@ ui <- navbarPage("Dashboard for Parking Violations in NY",
                             heatmapUI("heatmap")
                           )
                  ),
-                 tabPanel("Vehicle Type by State", plateTypeModuleUI("regState")),
-                 tabPanel('Vehicles', vehiclesUI('vehicles'))
+                 tabPanel("Vehicle Type by County", plateTypeModuleUI("regState")),
+                 tabPanel('Vehicles', vehiclesUI('vehicles')),
+                 tabPanel("Most Likely Ticket", mostLikelyTicketModuleUI("likelyTicket"))
 )
 
 server <- function(input, output, session) {
@@ -26,6 +28,7 @@ server <- function(input, output, session) {
   plateTypeModuleServer("regState",data)
   heatmapServer("heatmap")
   vehiclesServer('vehicles')
+  mostLikelyTicketModuleServer("likelyTicket")
 }
 
 shinyApp(ui, server)
