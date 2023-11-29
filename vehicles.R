@@ -1,7 +1,7 @@
 library(shiny)
 library(dplyr)
-library(lubridate)
 library(ggplot2)
+library(plotly)
 
 # Define UI
 vehiclesUI <- function(id) {
@@ -10,10 +10,10 @@ vehiclesUI <- function(id) {
     titlePanel("Parking Violations by Vehicle Make"),
     sidebarLayout(
       sidebarPanel(
-        uiOutput(ns("orderSelector"))  # Add the selectInput dynamically
+        selectInput(ns("orderSelector"), "Order by:", c("Ascending", "Descending"))
       ),
       mainPanel(
-        plotOutput(ns("vehiclePlot"))
+        plotlyOutput(ns("vehiclePlot"))
       )
     )
   )
@@ -33,7 +33,7 @@ vehiclesServer <- function(id) {
     
     df_percentage <- transform(vehicle_df, Percentage = (ViolationCode / sum(ViolationCode)) * 100)
     
-    # Filter to include only VehicleMakes with at least 100 entries
+    # Filter to include only VehicleMakes with at least 1000 entries
     included_vehicle_makes <- df_percentage %>%
       group_by(VehicleMake) %>%
       summarise(Count = n()) %>%
@@ -45,18 +45,28 @@ vehiclesServer <- function(id) {
     
     df_ordered <- df_filtered %>%
       group_by(VehicleMake) %>%
-      summarise(TotalPercentage = sum(Percentage)) %>%
-      arrange(desc(TotalPercentage))
+      summarise(TotalPercentage = sum(Percentage))
     
-    print(df_ordered)
-    
-    # Create the bar chart
-    output$vehiclePlot <- renderPlot({
-      ggplot(df_ordered, aes(x = reorder(VehicleMake, TotalPercentage, FUN = sum), y = TotalPercentage, fill = VehicleMake)) +
-        geom_bar(stat = "identity") +
-        theme_minimal() +
-        labs(title = "Percentage of Parking Violations by Vehicle Make", x = "Vehicle Make", y = "Percentage of Violations") +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    # Update the plot based on user input
+    observeEvent(input$orderSelector, {
+      # Define x based on user input
+      x_var <- if (input$orderSelector == "Descending") {
+        reorder(df_ordered$VehicleMake, desc(df_ordered$TotalPercentage))
+      } else {
+        reorder(df_ordered$VehicleMake, df_ordered$TotalPercentage)
+      }
+      
+      # Update the plot
+      output$vehiclePlot <- renderPlotly({
+        p <- ggplot(df_ordered, aes(x = x_var, y = TotalPercentage, fill = VehicleMake, text = paste(VehicleMake, ": Total Percentage: ", round(TotalPercentage, 2), "%"))) +
+          geom_bar(stat = "identity") +
+          theme_minimal() +
+          labs(title = "Percentage of Parking Violations by Vehicle Make", x = "Vehicle Make", y = "Percentage of Violations") +
+          theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+        
+        # Convert ggplot to plotly
+        ggplotly(p, tooltip = c("text"))
+      })
     })
   })
 }
