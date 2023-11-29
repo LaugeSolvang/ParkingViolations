@@ -54,10 +54,34 @@ categoryHourServer <- function(id) {
       left_join(violations_summary, by = "Violation.Code") %>%
       mutate(ViolationCategory = ifelse(is.na(ViolationCategory), "Other", ViolationCategory))
     
-    create_violation_plot <- function(data, y_value, plot_title, chart_type) {
+    violations_processed <- violations_processed %>%
+      mutate(ViolationDescription = case_when(
+        Violation.Code == 7 ~ "Red Light",
+        Violation.Code == 14 ~ "No Standing",
+        Violation.Code == 20 ~ "No Parking",
+        Violation.Code == 21 ~ "Street Cleaning",
+        Violation.Code == 36 ~ "School Zone Speeding",
+        Violation.Code == 37 ~ "Parking Meter Excess",
+        Violation.Code == 38 ~ "No Meter Receipt",
+        Violation.Code == 40 ~ "Close to Fire Hydrant",
+        Violation.Code == 46 ~ "Double Parking",
+        Violation.Code == 71 ~ "No Inspection Sticker",
+        TRUE ~ "Unknown"  # Default case
+      ))
+    
+    create_violation_plot <- function(violation_data, y_value, plot_title, chart_type) {
+      violation_data$LegendLabel <- paste(violation_data$ViolationCategory, "-", violation_data$ViolationDescription)
+      
+      # Prepare hover text
+      hover_text <- paste("Time: ", violation_data$ViolationTimeRounded, 
+                          "<br>Category: ", violation_data$ViolationCategory, 
+                          "<br>Description: ", violation_data$ViolationDescription, 
+                          "<br>", y_value, ": ", violation_data[[y_value]])
+      
       # Create a basic plotly object
-      p <- plot_ly(data, x = ~ViolationTimeRounded, y = as.formula(paste0("~", y_value)), 
-                   type = 'bar', color = ~ViolationCategory, colors = "Set3")
+      p <- plot_ly(violation_data, x = ~ViolationTimeRounded, y = as.formula(paste0("~", y_value)), 
+                   type = 'bar', color = ~LegendLabel, colors = "Set3",
+                   text = hover_text, hoverinfo = "text")
       
       # Modify the plot based on the chart type
       if (chart_type == "bar") {
@@ -75,9 +99,29 @@ categoryHourServer <- function(id) {
       
       return(p)    }
     observe({
-      categories <- c("All", sort(unique(violations_processed$ViolationCategory)))
-      updateSelectInput(session, "category", choices = categories)
+      # First, create a summary that maps categories to descriptions
+      category_descriptions <- violations_processed %>%
+        group_by(ViolationCategory) %>%
+        summarise(Description = first(ViolationDescription), .groups = 'drop') %>%
+        arrange(ViolationCategory)
+      
+      # Create a named vector for the selectInput choices
+      categories_with_descriptions <- setNames(
+        category_descriptions$ViolationCategory,
+        paste(category_descriptions$ViolationCategory, "-", category_descriptions$Description)
+      )
+      
+      # Add "All" option
+      categories_with_descriptions <- c("All" = "All", categories_with_descriptions)
+      
+      # Update the selectInput with these new choices
+      updateSelectInput(session, "category", choices = categories_with_descriptions)
     })
+    
+    category_to_description <- violations_processed %>%
+      group_by(ViolationCategory) %>%
+      summarise(Description = first(ViolationDescription), .groups = 'drop') %>%
+      pull(Description, name = ViolationCategory)
     
     output$violationPlot <- renderPlotly({
       # Data filtering logic based on user input
@@ -85,7 +129,6 @@ categoryHourServer <- function(id) {
       if (input$category != "All") {
         filtered_data <- filtered_data %>% filter(ViolationCategory == input$category)
       }
-      
       # Decide whether to use absolute or proportional values
       data_for_plot <- if (input$valueType == "proportional") {
         calculate_proportional_data(violations_processed, filtered_data, input$category)
@@ -96,7 +139,8 @@ categoryHourServer <- function(id) {
       plot_title <- if (input$category == "All") {
         "Violations Over the Course of a Day by Category"
       } else {
-        paste("Violations Over the Course of a Day for", input$category)
+        category_desc <- category_to_description[input$category]
+        paste("Violations Over the Course of a Day for", input$category, category_desc)
       }
       
       y_value <- if (input$valueType == "proportional") "Percentage" else "Count"
@@ -113,7 +157,7 @@ calculate_proportional_data <- function(all_data, filtered_data, category) {
   data_to_use <- if (category == "All") all_data else filtered_data
   
   data_to_use %>%
-    group_by(ViolationTimeRounded, ViolationCategory) %>%
+    group_by(ViolationTimeRounded, ViolationCategory, ViolationDescription) %>%
     summarise(Count = n(), .groups = 'drop') %>%
     left_join(total_violations_by_time, by = "ViolationTimeRounded") %>%
     mutate(Percentage = (Count / TotalCount) * 100)
@@ -122,10 +166,9 @@ calculate_proportional_data <- function(all_data, filtered_data, category) {
 
 calculate_absolute_data <- function(data) {
   data %>%
-    group_by(ViolationTimeRounded, ViolationCategory) %>%
+    group_by(ViolationTimeRounded, ViolationCategory, ViolationDescription) %>%
     summarise(Count = n(), .groups = 'drop')
 }
-
 
 ui <- fluidPage(
   categoryHourUI("violationsMap")
@@ -138,3 +181,4 @@ server <- function(input, output, session) {
 
 # Run the app
 shinyApp(ui, server)
+
