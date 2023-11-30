@@ -79,27 +79,58 @@ vehiclesServer <- function(id) {
     })
     
     clicked_make <- "TOYOT"
+    # Function to generate pie chart
+    generatePieChart <- function(filtered_data) {
+      body_type_distribution <- filtered_data %>%
+        group_by(VehicleBodyType) %>%
+        summarise(Count = n()) %>%
+        mutate(Percentage = (Count / sum(Count)) * 100) %>%
+        arrange(desc(Percentage)) %>%
+        slice_head(n = 5)  # Select only the top 5 body types
+      
+      # Mutate the VehicleBodyType to include descriptions
+      body_type_distribution <- body_type_distribution %>%
+        mutate(BodyTypeDescription = case_when(
+          VehicleBodyType %in% c("4DSD", "4DS") ~ "4 Dr. Sedan",
+          VehicleBodyType %in% c("2DSD", "2DS") ~ "2 Dr. Sedan",
+          VehicleBodyType %in% c("4D", "4DS", "4 DR") ~ "4 Dr.",
+          VehicleBodyType %in% c("SDN", "S4", "S2") ~ "Sedan",
+          VehicleBodyType %in% c("SUBN", "SUB", "SBR", "SB") ~ "Suburban",
+          VehicleBodyType %in% c("WAGO", "WAG") ~ "Wagon",
+          VehicleBodyType %in% c("DELV", "DEL") ~ "Delivery",
+          VehicleBodyType %in% c("PICK", "PIC", "PK") ~ "Pickup",
+          VehicleBodyType %in% c("VAN", "V") ~ "Van",
+          VehicleBodyType %in% c("TRAC", "TR", "TRA") ~ "Trac",
+          VehicleBodyType %in% c("REFG", "REF", "RE") ~ "Refrigerator Truck",
+          VehicleBodyType %in% c("UTIL", "UT", "UTE") ~ "Utility",
+          VehicleBodyType %in% c("CONV", "CON", "CVT") ~ "Convertible",
+          VehicleBodyType %in% c("SW", "SWA") ~ "Station Wagon",
+          VehicleBodyType %in% c("UT", "UTL") ~ "Utility",
+          VehicleBodyType %in% c("TK", "TRK", "TRK", "T") ~ "Truck",
+          VehicleBodyType %in% c("TRLR", "TR") ~ "Trailer",
+          # Add more conditions as needed
+          TRUE ~ as.character(VehicleBodyType)  # Default if no match
+        ))
+      
+      plot_ly(
+        data = body_type_distribution,
+        labels = ~BodyTypeDescription,  # Use the new variable
+        values = ~Percentage,
+        type = "pie",
+        textinfo = "percent+label",
+        insidetextorientation = "radial"
+      ) %>%
+        layout(title = paste("Vehicle Body Type Distribution for", unique(filtered_data$VehicleMake)))
+    }
+    
+    # UI and Server logic ...
+    
+    # Output for pie chart
     output$bodyTypePieChart <- renderPlotly({
-        selected_make <- clicked_make
-        filtered_data <- df_filtered %>% filter(VehicleMake == selected_make)
-        
-        body_type_distribution <- filtered_data %>%
-          group_by(VehicleBodyType) %>%
-          summarise(Count = n()) %>%
-          mutate(Percentage = (Count / sum(Count)) * 100) %>%
-          arrange(desc(Percentage)) %>%
-          slice_head(n = 5)  # Select only the top 5 body types
-        
-        plot_ly(
-          data = body_type_distribution,
-          labels = ~VehicleBodyType,
-          values = ~Percentage,
-          type = "pie",
-          textinfo = "percent+label",
-          insidetextorientation = "radial"
-        ) %>%
-          layout(title = paste("Vehicle Body Type Distribution for", selected_make))
-      })
+      selected_make <- clicked_make
+      filtered_data <- df_filtered %>% filter(VehicleMake == selected_make)
+      generatePieChart(filtered_data)
+    })
     
     # Capture click events and update server with selected VehicleMake
     observeEvent(event_data("plotly_click"), {
@@ -110,23 +141,7 @@ vehiclesServer <- function(id) {
       output$bodyTypePieChart <- renderPlotly({
         selected_make <- clicked_make
         filtered_data <- df_filtered %>% filter(VehicleMake == selected_make)
-        
-        body_type_distribution <- filtered_data %>%
-          group_by(VehicleBodyType) %>%
-          summarise(Count = n()) %>%
-          mutate(Percentage = (Count / sum(Count)) * 100) %>%
-          arrange(desc(Percentage)) %>%
-          slice_head(n = 5)  # Select only the top 5 body types
-        
-        plot_ly(
-          data = body_type_distribution,
-          labels = ~VehicleBodyType,
-          values = ~Percentage,
-          type = "pie",
-          textinfo = "percent+label",
-          insidetextorientation = "radial"
-        ) %>%
-          layout(title = paste("Vehicle Body Type Distribution for", selected_make))
+        generatePieChart(filtered_data)
       })
     })
   })

@@ -1,0 +1,12 @@
+name: ParkingViolations
+title: ParkingViolations
+username: sigurdsv
+account: sigurdsv
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10674984
+bundleId: 7988488
+url: https://sigurdsv.shinyapps.io/ParkingViolations/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
