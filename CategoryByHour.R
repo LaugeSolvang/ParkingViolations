@@ -13,14 +13,10 @@ categoryHourUI <- function(id) {
         radioButtons(ns("valueType"), "Choose Value Type:",
                      choices = list("Absolute" = "absolute", "Proportional" = "proportional"),
                      selected = "absolute"),
-        selectInput(ns("chartType"), "Choose Chart Type:",
-                    choices = list("Bar Chart" = "bar", "Stacked Bar Chart" = "stacked"),
-                    selected = "bar"),
-        selectInput(ns("category"), "Choose Category:", choices = c("All" = "All"))
-        
+        selectInput(ns("category"), "Choose Category:", choices = c("All" = "All")), selected = "All"
       ),
       mainPanel(
-        plotlyOutput(ns("violationPlot")) 
+        plotlyOutput(ns("violationPlot")), 
       )
     )
   )
@@ -47,7 +43,7 @@ categoryHourServer <- function(id) {
     violations_summary <- violations_processed %>%
       group_by(Violation.Code) %>%
       summarise(Count = n(), .groups = 'drop') %>%
-      mutate(ViolationCategory = ifelse(Count > 8000, as.character(Violation.Code), "Other"))
+      mutate(ViolationCategory = ifelse(Count > 11300, as.character(Violation.Code), "Other"))
     
     
     violations_processed <- violations_processed %>%
@@ -56,17 +52,17 @@ categoryHourServer <- function(id) {
     
     violations_processed <- violations_processed %>%
       mutate(ViolationDescription = case_when(
-        Violation.Code == 7 ~ "Red Light",
+        #Violation.Code == 7 ~ "Red Light",
         Violation.Code == 14 ~ "No Standing",
         Violation.Code == 20 ~ "No Parking",
         Violation.Code == 21 ~ "Street Cleaning",
         Violation.Code == 36 ~ "School Zone Speeding",
-        Violation.Code == 37 ~ "Parking Meter Excess",
+        #Violation.Code == 37 ~ "Parking Meter Excess",
         Violation.Code == 38 ~ "No Meter Receipt",
-        Violation.Code == 40 ~ "Close to Fire Hydrant",
-        Violation.Code == 46 ~ "Double Parking",
-        Violation.Code == 71 ~ "No Inspection Sticker",
-        TRUE ~ "Unknown"  # Default case
+        #Violation.Code == 40 ~ "Close to Fire Hydrant",
+        #Violation.Code == 46 ~ "Double Parking",
+        #Violation.Code == 71 ~ "No Inspection Sticker",
+        TRUE ~ ""  # Default case
       ))
     
     create_violation_plot <- function(violation_data, y_value, plot_title, chart_type) {
@@ -81,14 +77,11 @@ categoryHourServer <- function(id) {
       # Create a basic plotly object
       p <- plot_ly(violation_data, x = ~ViolationTimeRounded, y = as.formula(paste0("~", y_value)), 
                    type = 'bar', color = ~LegendLabel, colors = "Set3",
-                   text = hover_text, hoverinfo = "text")
+                   text = hover_text, hoverinfo = "text",
+                   customdata = ~ViolationCategory)
       
-      # Modify the plot based on the chart type
-      if (chart_type == "bar") {
-        p <- p %>% layout(barmode = 'group')
-      } else if (chart_type == "stacked") {
-        p <- p %>% layout(barmode = 'stack')
-      }
+      p <- p %>% layout(barmode = 'stack')
+      
       
       # Add labels and adjust layout
       p <- p %>% layout(title = plot_title,
@@ -123,6 +116,7 @@ categoryHourServer <- function(id) {
       summarise(Description = first(ViolationDescription), .groups = 'drop') %>%
       pull(Description, name = ViolationCategory)
 
+    
     output$violationPlot <- renderPlotly({
       # Data filtering logic based on user input
       filtered_data <- violations_processed
