@@ -13,10 +13,12 @@ categoryHourUI <- function(id) {
         radioButtons(ns("valueType"), "Choose Value Type:",
                      choices = list("Absolute" = "absolute", "Proportional" = "proportional"),
                      selected = "absolute"),
-        selectInput(ns("category"), "Choose Category:", choices = c("All" = "All")), selected = "All"
+        selectInput(ns("category"), "Choose Category:", choices = c("All" = "All")), selected = "All",
+        width = 3
       ),
       mainPanel(
         plotlyOutput(ns("violationPlot")), 
+        width = 9
       )
     )
   )
