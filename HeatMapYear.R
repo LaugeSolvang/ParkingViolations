@@ -86,33 +86,37 @@ heatmapServer <- function(id) {
     week_to_month$Week <- week_to_month$Week + 0.5
     week_to_month$MonthLabel <- toTitleCase(week_to_month$MonthLabel)
     
-    # Heatmap generation logic
+  
+    aspect_ratio <- 52 / 7
+    
+    # Calculate plot height based on aspect ratio and browser width
+    plot_width <- 1800
+    plot_height <- plot_width / aspect_ratio
+    
+    print(plot_width)
+    
     output$violationsHeatmap <- renderPlotly({
-      # Create the ggplot
-      p <- ggplot(violations_by_day, aes(x = Week, y = Weekday, fill = Count, 
-                                         text = ifelse(is.na(Description), 
-                                                       paste("Date:", Day, "<br>Count:", Count), 
-                                                       paste("Date:", Day, "<br>Count:", Count,"<br>Description:", Description)))) +
-        geom_tile(color = "white") +
-        scale_fill_viridis(option = "D") +
-        labs(
-          title = "Heatmap of Parking Violations",
-          subtitle = "Each square represents a day",
-          x = "Month",
-          y = "Day of the Week",
-          fill = "Number of Violations"
-        ) +
-        theme_minimal() +
-        theme(
-          axis.text.x = element_text(angle = 0, hjust = 0.5),
-          plot.margin = margin(t = 5, r = 5, b = 5, l = 5, unit = "pt")
-        ) +
-        scale_x_continuous(breaks = week_to_month$Week, labels = week_to_month$MonthLabel) +
-        scale_y_discrete(limits = rev(levels(violations_by_day$Weekday))) +
-        coord_equal()
       
-      # Convert to plotly object
-      ggplotly(p, tooltip = "text")
+      # Custom text for tooltip
+      custom_text <- ifelse(is.na(violations_by_day$Description), 
+                            paste("Date:", violations_by_day$Day, "<br>Count:", violations_by_day$Count), 
+                            paste("Date:", violations_by_day$Day, "<br>Count:", violations_by_day$Count,"<br>Description:", violations_by_day$Description))
+      
+      p <- plot_ly(violations_by_day, x = ~Week, y = ~Weekday, z = ~Count, type = 'heatmap', text = ~custom_text, hoverinfo = 'text',
+                   colors = viridis::viridis(256, direction = -1),  # Reversed Viridis color scale
+                   width = plot_width, height = plot_height) %>% # Set width and height here
+        layout(
+          xaxis = list(title = 'Month', tickvals = week_to_month$Week, ticktext = week_to_month$MonthLabel),
+          yaxis = list(title = 'Day of the Week', autorange = "reversed", scaleanchor = "x", scaleratio = 1),
+          margin = list(t = 5, r = 5, b = 5, l = 5) # Adjust margins as needed
+          
+        ) %>%
+        colorbar(title = "Violations",
+                 len = 1,      # Length of the color bar (70% of the plot height)
+                 y = 1,        # Position
+                 thickness = 20  # Thickness of the color bar
+        )      
+      p
     })
   })
 }
