@@ -4,7 +4,7 @@ library(shinythemes)
 source("ViolationsMap.r")
 source("CategoryByHour.R")
 source("StateNType.R")
-source("HeatMapYear.R")
+source("HeatMapYear.R", encoding = "UTF-8")
 source("vehicles.R")
 source("MostLikelyTicket.R")
 
