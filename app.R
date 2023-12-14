@@ -5,9 +5,7 @@ source("ViolationsMap.r")
 source("CategoryByHour.R")
 
 source("PlateType.R")
-source("HeatMapYear.R")
 
-source("HeatMapYear.R")
 source("HeatMapYear.R", encoding = "UTF-8")
 
 source("vehicles.R")
