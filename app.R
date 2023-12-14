@@ -3,13 +3,13 @@ library(shinythemes)
 
 source("ViolationsMap.r")
 source("CategoryByHour.R")
-<<<<<<< HEAD
+
 source("PlateType.R")
 source("HeatMapYear.R")
-=======
-source("StateNType.R")
+
+source("HeatMapYear.R")
 source("HeatMapYear.R", encoding = "UTF-8")
->>>>>>> a6c5f8999f493dd3fc77333673b1bf564d2e2d61
+
 source("vehicles.R")
 source("MostLikelyTicket.R")
 
