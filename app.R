@@ -3,7 +3,7 @@ library(shinythemes)
 
 source("ViolationsMap.r")
 source("CategoryByHour.R")
-source("StateNType.R")
+source("PlateType.R")
 source("HeatMapYear.R")
 source("vehicles.R")
 source("MostLikelyTicket.R")
