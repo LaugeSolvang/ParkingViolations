@@ -28,7 +28,14 @@ palette_function <- colorBin(palette = "viridis", bins = breaks_third_root, doma
 violationsMapUI <- function(id) {
   ns <- NS(id)
   fluidPage(
-    titlePanel("Parking Violations in New York Precincts"),
+    titlePanel("The Color of Compliance: Painting New York's Parking Landscape"),
+    fluidRow(
+      column(
+        width = 12,
+        tags$h3("Dense Parking Violations in Lower and Midtown Manhattan Spare Central Park")
+      )
+    ),
+    
     fluidRow(
       column(
         width = 12, # Full width

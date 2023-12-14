@@ -11,9 +11,18 @@ library(plotly)
 heatmapUI <- function(id) {
   ns <- NS(id)
   fluidPage(
-    titlePanel("Heatmap of Parking Violations"),
-    mainPanel(
-      plotlyOutput(ns("violationsHeatmap"), width = "100%") # Adjusted to viewport height
+    titlePanel("Seasonal Rhythms and Weekly Patterns in Parking Violations"),
+    sidebarLayout(
+      # Subtitle in a sidebar panel
+      sidebarPanel(
+        tags$h4("Throughout the year, parking violations display a consistent pattern, with a notable decrease during summer months. Weekends, in particularly Sundays, see fewer violations. Holidays and snow days almost bring these violations to a complete stop."),
+        width = 3
+      ),
+      # Heatmap in the main panel
+      mainPanel(
+        plotlyOutput(ns("violationsHeatmap"), width = "auto"),
+        width = 9
+      )
     )
   )
 }
@@ -109,7 +118,7 @@ heatmapServer <- function(id) {
     aspect_ratio <- 52 / 7
     
     # Calculate plot height based on aspect ratio and browser width
-    plot_width <- 1800
+    plot_width <- 1400
     plot_height <- plot_width / aspect_ratio
     
     weekday_to_int <- c(Sunday = 7, Saturday = 6, Friday = 5, Thursday = 4, Wednesday = 3, Tuesday = 2, Monday = 1)
@@ -176,7 +185,7 @@ heatmapServer <- function(id) {
           
           
         ) %>%
-        colorbar(title = "Violations",
+        colorbar(title = "Number of Violations",
                  len = 1,      # Length of the color bar (70% of the plot height)
                  y = 1,        # Position
                  thickness = 20  # Thickness of the color bar

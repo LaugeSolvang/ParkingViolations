@@ -7,17 +7,19 @@ library(plotly)
 categoryHourUI <- function(id) {
   ns <- NS(id)
   fluidPage(
-    titlePanel("Violations Over the Course of a Day by Category"),
+    titlePanel("The Morning Rush"),
     sidebarLayout(
+      # Subtitle as a part of sidebar, above input controls
       sidebarPanel(
+        tags$h4("As the city stirs, parking violations climb swiftly in the early hours, then hold steady, and finally ebb as the day winds down."),
         radioButtons(ns("valueType"), "Choose Value Type:",
                      choices = list("Absolute" = "absolute", "Proportional" = "proportional"),
                      selected = "absolute"),
-        selectInput(ns("category"), "Choose Category:", choices = c("All" = "All")), selected = "All",
+        selectInput(ns("category"), "Choose Violation COde:", choices = c("All" = "All")),
         width = 3
       ),
       mainPanel(
-        plotlyOutput(ns("violationPlot")), 
+        plotlyOutput(ns("violationPlot")),
         width = 9
       )
     )
@@ -133,11 +135,12 @@ categoryHourServer <- function(id) {
       }
       
       plot_title <- if (input$category == "All") {
-        "Violations Over the Course of a Day by Category"
+        paste("Violations Over the Course of a Day for", input$category, "violations")
       } else {
         category_desc <- category_to_description[input$category]
-        paste("Violations Over the Course of a Day for", input$category, category_desc)
+        paste("Violations Over the Course of a Day for violation", input$category, category_desc)
       }
+      
       
       y_value <- if (input$valueType == "proportional") "Percentage" else "Count"
       
