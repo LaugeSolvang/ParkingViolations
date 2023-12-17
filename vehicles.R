@@ -54,6 +54,7 @@ vehiclesServer <- function(id) {
       summarise(TotalPercentage = sum(Percentage))
     
     x_var_reactive <- reactiveVal()
+    clicked_make_reactive <- reactiveVal("TOYOT")  # Initialize with default value
     
     # Update the plot based on user input
     observeEvent(input$orderSelector, {
@@ -71,14 +72,15 @@ vehiclesServer <- function(id) {
           geom_bar(stat = "identity") +
           theme_minimal() +
           labs(title = "Percentage of Parking Violations by Vehicle Make", x = "Vehicle Make", y = "Percentage of Violations") +
-          theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+          theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+                legend.position = "none") +
+          scale_fill_manual(values = ifelse(df_ordered$VehicleMake == clicked_make_reactive(), "blue", "grey"))
         
         # Convert ggplot to plotly
         p <- ggplotly(p, tooltip = c("text"))
       })
     })
     
-    clicked_make <- "TOYOT"
     # Function to generate pie chart
     generatePieChart <- function(filtered_data) {
       body_type_distribution <- filtered_data %>%
@@ -127,7 +129,7 @@ vehiclesServer <- function(id) {
     
     # Output for pie chart
     output$bodyTypePieChart <- renderPlotly({
-      selected_make <- clicked_make
+      selected_make <- clicked_make_reactive()
       filtered_data <- df_filtered %>% filter(VehicleMake == selected_make)
       generatePieChart(filtered_data)
     })
@@ -136,10 +138,11 @@ vehiclesServer <- function(id) {
     observeEvent(event_data("plotly_click"), {
       clicked_index <- as.numeric(event_data("plotly_click")$x)
       clicked_make <- levels(x_var_reactive())[clicked_index]
+      clicked_make_reactive(clicked_make)
       
       # Show pie chart for vehicle body type distribution
       output$bodyTypePieChart <- renderPlotly({
-        selected_make <- clicked_make
+        selected_make <- clicked_make_reactive()
         filtered_data <- df_filtered %>% filter(VehicleMake == selected_make)
         generatePieChart(filtered_data)
       })
