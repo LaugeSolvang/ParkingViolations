@@ -13,17 +13,17 @@ violationTrendsModuleUI <- function(id) {
   )
 } 
 
-violations <- read.csv("sampled_200k_rows.csv", stringsAsFactors = TRUE)
+violationsTrend <- read.csv("sampled_200k_rows.csv", stringsAsFactors = TRUE)
 
-violations$Issue.Date <- as.Date(violations$Issue.Date, format = "%m/%d/%Y")
+violationsTrend$Issue.Date <- as.Date(violationsTrend$Issue.Date, format = "%m/%d/%Y")
 
 before_date <- as.Date("2016-06-01", format = "%Y-%m-%d")
 after_date <- as.Date("2017-06-30", format = "%Y-%m-%d")
 
-violations <- violations[violations$Issue.Date >= before_date, ]
-violations <- violations[violations$Issue.Date <= after_date, ]
+violationsTrend <- violationsTrend[violationsTrend$Issue.Date >= before_date, ]
+violationsTrend <- violationsTrend[violationsTrend$Issue.Date <= after_date, ]
 
-base_plot <- ggplot(violations, aes(x = Violation.Code)) +
+base_plot <- ggplot(violationsTrend, aes(x = Violation.Code)) +
   geom_bar(aes(fill = factor(Violation.Code)), width = 0.9) +
   labs(title = "Distribution of Violation Codes", subtitle = "Date: {frame_time}", x = "Violation Code", y = "Count") +
   theme_minimal() +
