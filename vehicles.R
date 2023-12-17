@@ -184,12 +184,17 @@ vehiclesServer <- function(id) {
         geom_text(aes(label = paste0(round(Percentage, 1), "%")), position = position_stack(vjust = 0.5)) +
         scale_fill_manual(values = setNames(color_palette, levels(fd$Violation.Description))) +
         theme(
-          legend.position = "bottom",
           plot.title = element_text(hjust = 0.5)
         )
       
       return(dc)
     }
+    
+    # Output for most likely tickets
+    output$ticketCountPlot <- renderPlot({
+      fd <- filteredData()
+      generateTicketCountPlot(fd)
+    })
     
     # Capture click events and update server with selected VehicleMake
     observeEvent(event_data("plotly_click"), {
@@ -204,6 +209,7 @@ vehiclesServer <- function(id) {
         generatePieChart(filtered_data)
       })
       
+      # Show Donut chart for most likely tickes
       output$ticketCountPlot <- renderPlot({
         fd <- filteredData()
         generateTicketCountPlot(fd)
