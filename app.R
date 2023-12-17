@@ -23,8 +23,7 @@ ui <- navbarPage("Dashboard for Parking Violations in NY",
                           )
                  ),
                  tabPanel("Vehicle Type by County", plateTypeModuleUI("regState")),
-                 tabPanel('Vehicles', vehiclesUI('vehicles')),
-                 tabPanel("Most Likely Ticket", mostLikelyTicketModuleUI("likelyTicket"))
+                 tabPanel('Violations by Vehicle Make', vehiclesUI('vehicles'))
 )
 
 server <- function(input, output, session) {

@@ -18,11 +18,21 @@ vehiclesUI <- function(id) {
       ),
       column(
         width = 6,
-        plotlyOutput(ns("bodyTypePieChart"))
+        plotlyOutput(ns("bodyTypePieChart")),
+        plotOutput(ns("ticketCountPlot"))
       )
-    )
+    ),
   )
 }
+
+
+mostLikelyTicketModuleServer <- function(id, data) {
+  moduleServer(id, function(input, output, session) {
+    
+  })
+}
+
+
 
 # Define server logic
 vehiclesServer <- function(id) {
@@ -134,6 +144,53 @@ vehiclesServer <- function(id) {
       generatePieChart(filtered_data)
     })
     
+    ns <- session$ns
+    data <- select(violations, Violation.Description, Vehicle.Make)
+    
+    topTicketTypes <- reactive({
+      data %>%
+        group_by(Vehicle.Make) %>%
+        summarise(Count = n(), .groups = "drop") %>%
+        arrange(desc(Count)) %>%
+        slice_head(n=10) %>%
+        pull(Vehicle.Make)
+    })
+    
+    filteredData <- reactive({
+      data %>%
+        filter(Vehicle.Make == clicked_make_reactive()) %>%
+        group_by(Violation.Description) %>%
+        summarise(Count = n(), .groups = "drop") %>%
+        arrange(desc(Count)) %>%
+        top_n(10) %>%
+        mutate(Percentage = Count / sum(Count) * 100)
+    })
+    
+    generateTicketCountPlot <- function(filtered_data) {
+      color_palette <- c("#1f78b4", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a", "#b15928", "#a6cee3", "#b2df8a", "#fb9a99", "#fdbf6f")
+      
+      fd <- filtered_data
+      fd$Violation.Description <- factor(fd$Violation.Description)
+      
+      dc <- ggplot(fd, aes(x = "", y = Count, fill = Violation.Description)) +
+        geom_bar(stat = "identity", width = 1, color = "white") +
+        geom_polygon(data = data.frame(x = c(-1, 1, 1, -1), y = c(-1, -1, 1, 1)), aes(x = x, y = y), fill = "white", color = "white", show.legend = FALSE) +
+        coord_polar("y", start = 0) +
+        theme_void() +
+        labs(
+          fill = "Top 10 most likely violations",
+          title = paste("Ticket Distribution for", clicked_make_reactive())
+        ) +
+        geom_text(aes(label = paste0(round(Percentage, 1), "%")), position = position_stack(vjust = 0.5)) +
+        scale_fill_manual(values = setNames(color_palette, levels(fd$Violation.Description))) +
+        theme(
+          legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5)
+        )
+      
+      return(dc)
+    }
+    
     # Capture click events and update server with selected VehicleMake
     observeEvent(event_data("plotly_click"), {
       clicked_index <- as.numeric(event_data("plotly_click")$x)
@@ -145,6 +202,11 @@ vehiclesServer <- function(id) {
         selected_make <- clicked_make_reactive()
         filtered_data <- df_filtered %>% filter(VehicleMake == selected_make)
         generatePieChart(filtered_data)
+      })
+      
+      output$ticketCountPlot <- renderPlot({
+        fd <- filteredData()
+        generateTicketCountPlot(fd)
       })
     })
   })
