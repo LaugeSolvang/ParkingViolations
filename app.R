@@ -10,6 +10,7 @@ source("HeatMapYear.R", encoding = "UTF-8")
 
 source("vehicles.R")
 source("MostLikelyTicket.R")
+source("ViolationTrendsAnimate.r")
 
 ui <- navbarPage("Dashboard for Parking Violations in NY", 
                  theme = shinytheme("flatly"),
@@ -21,8 +22,8 @@ ui <- navbarPage("Dashboard for Parking Violations in NY",
                           )
                  ),
                  tabPanel("Vehicle Type by County", plateTypeModuleUI("regState")),
-                 tabPanel('Vehicles', vehiclesUI('vehicles')),
-                 tabPanel("Most Likely Ticket", mostLikelyTicketModuleUI("likelyTicket"))
+                 tabPanel('Violations by Vehicle Make', vehiclesUI('vehicles')),
+                 tabPanel("Violation Trends over time", violationTrendsModuleUI("violationTrend"))
 )
 
 server <- function(input, output, session) {
@@ -32,6 +33,13 @@ server <- function(input, output, session) {
   heatmapServer("heatmap")
   vehiclesServer('vehicles')
   mostLikelyTicketModuleServer("likelyTicket")
+  
+  output$animated_plot <- renderImage({
+    list(src = "www/animated_violation_code.gif",
+         contentType = "image/gif",
+         width = "100%",
+         height = "auto")
+  }, deleteFile = FALSE)
 }
 
 shinyApp(ui, server)
