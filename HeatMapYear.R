@@ -91,18 +91,12 @@ heatmapServer <- function(id) {
       summarize(FirstWeek = min(Week)) %>%
       ungroup()
     
+    Sys.setlocale("LC_TIME", "C")
+    
     # Ensure that the YearMonth column is formatted as a date before converting to MonthLabel
     month_weeks$MonthLabel <- format(as.Date(paste0(month_weeks$YearMonth, "-01")), "%b")
     
-    # Create a conversion table from abbreviation to full month name
-    month_name_conversion <- c(jan = "January", feb = "February", mar = "March", 
-                               apr = "April", maj = "May", jun = "June", 
-                               jul = "July", aug = "August", sep = "September", 
-                               okt = "October", nov = "November", dec = "December")
-    
-    # Apply the conversion to the MonthLabel column
-    month_weeks$MonthLabel <- month_name_conversion[month_weeks$MonthLabel]
-    
+
     # Create a mapping of weeks to month labels
     week_to_month <- month_weeks %>%
       select(Week = FirstWeek, MonthLabel) %>%
@@ -112,8 +106,7 @@ heatmapServer <- function(id) {
     week_to_month <- week_to_month[-1, ]
     
     week_to_month$Week <- week_to_month$Week + 1.5
-    week_to_month$MonthLabel <- toTitleCase(week_to_month$MonthLabel)
-    
+
   
     aspect_ratio <- 52 / 7
     
