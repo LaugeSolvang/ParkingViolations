@@ -94,7 +94,7 @@ heatmapServer <- function(id) {
     Sys.setlocale("LC_TIME", "C")
     
     # Ensure that the YearMonth column is formatted as a date before converting to MonthLabel
-    month_weeks$MonthLabel <- format(as.Date(paste0(month_weeks$YearMonth, "-01")), "%b")
+    month_weeks$MonthLabel <- format(as.Date(paste0(month_weeks$YearMonth, "-01")), "%B")
     
 
     # Create a mapping of weeks to month labels
