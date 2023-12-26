@@ -9,16 +9,26 @@ violations <- read.csv("sampled_200k_rows.csv")
 vehiclesUI <- function(id) {
   ns <- NS(id)
   fluidPage(
+    titlePanel("Distribution of Parking Violations by Vehicle Make"),
+    sidebarLayout(
+      sidebarPanel(
+        selectInput(ns("orderSelector"), "Order by:", c("Ascending", "Descending")),
+        p("Click on one of the bars, to see their internal distribution of parking tickets and vehicle types below"),
+        width = 3
+      ),
+      mainPanel(
+        plotlyOutput(ns("vehiclePlot")), 
+        width = 9
+      )
+    ),
     titlePanel("Parking Violations by Vehicle Make"),
-    selectInput(ns("orderSelector"), "Order by:", c("Ascending", "Descending")),
     fluidRow(
       column(
         width = 6,
-        plotlyOutput(ns("vehiclePlot"))
+        plotlyOutput(ns("bodyTypePieChart")),
       ),
       column(
         width = 6,
-        plotlyOutput(ns("bodyTypePieChart")),
         plotOutput(ns("ticketCountPlot"))
       )
     ),
@@ -81,7 +91,7 @@ vehiclesServer <- function(id) {
         p <- ggplot(df_ordered, aes(x = x_var, y = TotalPercentage, fill = VehicleMake, text = paste(VehicleMake, ": Total Percentage: ", round(TotalPercentage, 2), "%"))) +
           geom_bar(stat = "identity") +
           theme_minimal() +
-          labs(title = "Percentage of Parking Violations by Vehicle Make", x = "Vehicle Make", y = "Percentage of Violations") +
+          labs(x = "Vehicle Make", y = "Percentage of Violations") +
           theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
                 legend.position = "none") +
           scale_fill_manual(values = ifelse(df_ordered$VehicleMake == clicked_make_reactive(), "blue", "grey"))
