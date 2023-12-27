@@ -22,7 +22,8 @@ breaks_third_root <- seq(third_root_min, third_root_max, length.out = 10) ^ 2.5
 
 # Print breaks for verification
 print(breaks_third_root)
-palette_function <- colorBin(palette = "viridis", bins = breaks_third_root, domain = merged_data$Count)
+# Use the 'YlOrRd' color palette from RColorBrewer
+palette_function <- colorBin(palette = "YlOrRd", bins = breaks_third_root, domain = merged_data$Count)
 
 # UI function for the violations map
 violationsMapUI <- function(id) {
