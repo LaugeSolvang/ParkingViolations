@@ -46,11 +46,11 @@ server <- function(input, output, session) {
   
   output$downloadReport <- downloadHandler(
     filename = function() {
-      "DataVisualization.pdf"
+      "DataVisualization_report.pdf"
     },
     content = function(file) {
       # Ensure the file path is correct relative to your Shiny app directory
-      file.copy("DataVisualization.pdf", file)
+      file.copy("DataVisualization_report.pdf", file)
     }
   )
   
