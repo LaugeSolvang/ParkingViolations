@@ -23,7 +23,10 @@ ui <- navbarPage("Dashboard for Parking Violations in NY",
                  ),
                  tabPanel("Vehicle Type by County", plateTypeModuleUI("regState")),
                  tabPanel('Violations by Vehicle Make', vehiclesUI('vehicles')),
-                 tabPanel("Violation Trends over time", violationTrendsModuleUI("violationTrend"))
+                 tabPanel("Violation Trends over time", violationTrendsModuleUI("violationTrend")),
+                 tabPanel("Download Report",
+                          downloadButton("downloadReport", "Download Data Visualization Report")
+                 )
 )
 
 server <- function(input, output, session) {
@@ -40,6 +43,17 @@ server <- function(input, output, session) {
          width = "100%",
          height = "auto")
   }, deleteFile = FALSE)
+  
+  output$downloadReport <- downloadHandler(
+    filename = function() {
+      "DataVisualization.pdf"
+    },
+    content = function(file) {
+      # Ensure the file path is correct relative to your Shiny app directory
+      file.copy("DataVisualization.pdf", file)
+    }
+  )
+  
 }
 
 shinyApp(ui, server)
